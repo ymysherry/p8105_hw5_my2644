@@ -98,6 +98,10 @@ results_df %>%
 ```
 ##Problem 2
 Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
+
+Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
+
+Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
 ```{r}
 lda_df = 
   tibble(
@@ -108,10 +112,10 @@ lda_df =
    unnest(data) %>% 
   mutate(
     path = substr(path, 0, 6),
-    group = substr(path, 0, 3),
-    sub_id = substr(path, 5, 6)) %>%
+    exp_arm = substr(path, 0, 3),
+    subject_id = substr(path, 5, 6)) %>%
   
-  select(path, group, sub_id, week_1:week_8) %>%
+  select(path, exp_arm, subject_id, week_1:week_8) %>%
   pivot_longer(
     week_1:week_8,
     names_to = "week",
@@ -122,12 +126,26 @@ lda_df =
 ```
 
 
-Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
-
-
-Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
-
-
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+```{r}
+lda_df %>%
+  mutate(week = fct_reorder(week, observation)) %>%
+  ggplot(aes(x = week, y = observation, group = exp_arm)) +
+  geom_line(aes(color = exp_arm)) + 
+  labs(
+  title = "Observation on each subject over time",
+  x = "Week",
+  y = "Observation",
+  caption = "Data from the longditudinal study dataset"
+  )
+```
+The spaghetti plot shows that over time, the subjects inexperimental arm have higher observed values than subjects in the control arm.
+
+
+
+
+
+
+
 
 
