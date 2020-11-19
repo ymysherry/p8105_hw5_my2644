@@ -9,7 +9,7 @@ output: html_document
 library(tidyverse)
 library(rvest)
 library(httr)
-
+library(ggplot2)
 ```
 
 ```{r}
@@ -195,12 +195,8 @@ summarize_fx = function(x){
   )
 }
 
-```
-
-```{r}
-list_df =
-  list_df %>%
-  mutate(
+list_df_test = list_df %>%
+   mutate(
     summarize_list = map(.x = t_test, ~summarize_fx(.x))
   ) %>%
   unnest(summarize_list)
@@ -208,20 +204,74 @@ list_df =
 
 
 
+
+
+
 Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. 
 Describe the association between effect size and power.
 
+```{r}
+
+list_df_test %>% 
+  ggplot(aes(x = mu, y = prop)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(
+  title = "Proportion of times the null was rejected",
+  x = "True value of mu",
+  y = "Power of test",
+  caption = "Data from the list_df "
+  )
+```
+When the effect size grows, the power of test increases at an increasing speed and then at a decreasing speed
 
 Make a plot showing the average estimate of μ̂  on the y axis and the true value of μ on the x axis. 
+```{r}
+list_df_test %>%
+  ggplot(aes(x = mu, y = avg_est)) +
+  geom_point() +
+  labs(
+  title = "True mu and average estimate plot",
+  x = "True value of mu",
+  y = "Average estimate",
+  caption = "Data from the list_df dataset"
+  )
+```
 
 
 Make a second plot (or overlay on the first) the average estimate of μ̂  only in samples for which the null was rejected on the y axis and the true value of μ on the x axis.
+```{r}
+reject_fx = function(x){
+   x %>%
+    mutate(
+      H0 = case_when(
+        p.value < 0.05 ~ "rejected",
+        p.value > 0.05 ~ "not rejected"
+        )
+    ) %>%
+    filter(H0 == "rejected") %>%
+    summarize(avg_est_rej = mean(estimate))
+}
+list_df %>%
+  mutate(
+    avg_list = map(.x = list_df$t_test, ~reject_fx(.x))
+  ) %>%
+  unnest(avg_list) %>%
+  ggplot(aes(x = mu, y = avg_est_rej)) +
+  geom_point() +
+  labs(
+  title = "True mu and average estimate plot (only when null is rejected)",
+  x = "True value of mu",
+  y = "Average estimate when null is rejected",
+  caption = "Data from the list_df dataset"
+  )
+```
 
 
 Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
 
 
-
+The sample average of mu across tests for which null is rejected is not equal to the true valye of mu, in partucularly when effect size is smaller. When the sample size is not large enough, the difference between sample mean and true mu gets bigger.
 
 
 
