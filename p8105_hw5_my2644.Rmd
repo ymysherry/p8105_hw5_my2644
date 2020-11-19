@@ -34,7 +34,7 @@ scale_fill_discrete = scale_fill_viridis_d
 Read in data. Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
 ```{r}
 homicide_df = 
-  read_csv("data/homicide-data.csv") %>% 
+  read_csv("hom_data/homicide-data.csv") %>% 
   mutate(
     city_state = str_c(city, state, sep = "_"),
     
@@ -97,3 +97,37 @@ results_df %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 ##Problem 2
+Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
+```{r}
+lda_df = 
+  tibble(
+    path = list.files("lda_data")) %>% 
+  mutate(
+    data = map(.x = str_c("lda_data/", path), ~read_csv(.x))
+  ) %>%
+   unnest(data) %>% 
+  mutate(
+    path = substr(path, 0, 6),
+    group = substr(path, 0, 3),
+    sub_id = substr(path, 5, 6)) %>%
+  
+  select(path, group, sub_id, week_1:week_8) %>%
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    values_to = "observation"
+  ) %>%
+  mutate(week = substr(week, 6, 7))
+
+```
+
+
+Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
+
+
+Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
+
+
+Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+
+
